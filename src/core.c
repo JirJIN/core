@@ -6,75 +6,74 @@
  * https://mariuszbartosik.com/opengl-4-x-initialization-in-windows-without-a-framework/
  */
 
-/* Currently linux only */
+#include "window/window.h"
+#include "event/event.h"
+#include "env/env.h"
 
-#ifdef __linux__
-  #include <X11/Xlib.h>
-  #include <X11/Xutil.h>
-  #include <X11/keysymdef.h>
-#elif _WIN32
-#else
-  #error Platform not supported (Core)
-#endif
+struct JIN_Window *root; /* Root window */
+int                active;
+struct JIN_Env     env; /* Environment variables */
 
-#include <stdio.h>
-
-static Display *display;
-static Window   window;
-static Screen  *screen;
+/* CORE FUNCTIONS */
 
 /*
- * core_init
+ * JIN_init
  *
  * @desc
+ *   Initialize JIN
  * @return
+ *    0 on success
+ *   !0 on failure
  */
-int JIN_core_init(void)
+#include <stdio.h>
+int JIN_init(void)
 {
-  int      screen_id;
-  XEvent   event;
+  JIN_env_init(&JIN_env);
+  root = JIN_window_create();
+  
+  active = 1;
 
-  if (!(display = XOpenDisplay(NULL))) {
-    printf("Can't open the display\n");
-  }
-  screen = XDefaultScreenOfDisplay(display);
-  screen_id = XDefaultScreen(display);
+  return 0;
+}
 
-  window = XCreateSimpleWindow(display, XRootWindowOfScreen(screen), 0, 0, 480, 320, 1,
-      XBlackPixel(display, screen_id), XWhitePixel(display, screen_id));
+/*
+ * JIN_quit
+ *
+ * @desc
+ *   Quit JIN
+ * @return
+ *   0 on success
+ */
+int JIN_quit(void)
+{
+  JIN_window_destroy(root);
+  JIN_env_quit(&JIN_env);
 
-  XSelectInput(display, window, KeyPressMask | KeyReleaseMask | KeymapStateMask);
+  return 0;
+}
 
-  XClearWindow(display, window);
-  XMapRaised(display, window);
+/*
+ * JIN_input
+ *
+ * @desc
+ *   Handle input
+ * @return
+ *    0 on success
+ *   !0 on failure
+ */
+#include <stdio.h>
+int JIN_input(void)
+{
+  struct JIN_Event event;
+  JIN_event_poll(&event);
 
-  char str[25];
-  KeySym keysym = 0;
-  int len = 0;
-  int running = 1;
-
-  while (running) {
-    XNextEvent(display, &event);
-
-    switch (event.type) {
-      case KeymapNotify:
-        XRefreshKeyboardMapping(&event.xmapping);
-        break;
-      case KeyPress:
-        len = XLookupString(&event.xkey, str, 25, &keysym, NULL);
-        if (len > 0) {
-          printf("Key pressed: %s\n", str);
-        }
-        if (keysym == XK_Escape) {
-          running = 0;
-        }
-        break;
-      case KeyRelease:
-        len = XLookupString(&event.xkey, str, 25, &keysym, NULL);
-        if (len > 0) {
-          printf("Key released: %s\n", str);
-        }
-        break;
+  if (event.type == JIN_EVENT_KEY) {
+    if (event.data.key.type == JIN_EVENT_KEY_DOWN) {
+      printf("Key is pressed\n");
+      /* Escape key */
+      if (event.data.key.key == 0x09) {
+        active = 0;
+      }
     }
   }
 
@@ -82,16 +81,58 @@ int JIN_core_init(void)
 }
 
 /*
- * core_quit
+ * JIN_update
+ * 
+ * @desc
+ *   Update stuff
+ * @return
+ *   0 on success
+ */
+int JIN_update(void)
+{
+  return 0;
+}
+
+/*
+ * JIN_draw
  *
  * @desc
+ *   Draw stuff
  * @return
+ *   0 on success
  */
-int JIN_core_quit(void)
+int JIN_draw(void)
 {
-  XDestroyWindow(display, window);
-  XFree(screen);
-  XCloseDisplay(display);
+  return 0;
+}
 
+/*
+ * JIN_active
+ *
+ * @desc
+ *   Check if the game is active
+ * @return
+ *   !0 if active
+ *    0 if not acive
+ */
+int JIN_active(void)
+{
+  return active;
+}
+
+/*
+ * JIN_dialog
+ *
+ * @desc
+ *   Create a dialog (pop-up box)
+ *   to display a message to the user
+ * @param msg
+ *   String to display
+ * @return
+ *    0 on success
+ *   !0 on failure
+ */
+int JIN_dialog(const char *msg)
+{
   return 0;
 }
