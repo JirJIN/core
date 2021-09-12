@@ -3,7 +3,7 @@
 
 int JIN_sleep(double time)
 {
-  Sleep(time);
+  Sleep((DWORD) time);
 
   return 0;
 }

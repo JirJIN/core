@@ -11,6 +11,7 @@
 #ifdef __linux__
   #include "env_x11.h"
 #elif _WIN32
+  #include "env_win32.h"
 #else
   #error Platform not supported (JIN Env)
 #endif

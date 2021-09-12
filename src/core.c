@@ -25,7 +25,6 @@ struct JIN_Env     env; /* Environment variables */
  *    0 on success
  *   !0 on failure
  */
-#include <stdio.h>
 int JIN_init(void)
 {
   JIN_env_init(&JIN_env);
@@ -66,6 +65,16 @@ int JIN_input(void)
 {
   struct JIN_Event event;
   JIN_event_poll(&event);
+
+  switch (event.type) {
+    case JIN_EVENT_QUIT:
+      active = 0;
+      break;
+    case JIN_EVENT_KEY:
+      break;
+    case JIN_EVENT_MOUSE:
+      break;
+  }
 
   if (event.type == JIN_EVENT_KEY) {
     if (event.data.key.type == JIN_EVENT_KEY_DOWN) {

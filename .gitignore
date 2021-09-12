@@ -10,5 +10,14 @@ compile_commands.json
 # Linux
 Makefile
 
+# Windows
+*.vcxproj
+*.filters
+*.sln
+*.user
+*.dir
+.vs/
+x64
+
 # Binaries
 bin/
