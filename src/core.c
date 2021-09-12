@@ -60,28 +60,28 @@ int JIN_quit(void)
  *    0 on success
  *   !0 on failure
  */
-#include <stdio.h>
 int JIN_input(void)
 {
   struct JIN_Event event;
-  JIN_event_poll(&event);
-
-  switch (event.type) {
-    case JIN_EVENT_QUIT:
-      active = 0;
-      break;
-    case JIN_EVENT_KEY:
-      break;
-    case JIN_EVENT_MOUSE:
-      break;
-  }
-
-  if (event.type == JIN_EVENT_KEY) {
-    if (event.data.key.type == JIN_EVENT_KEY_DOWN) {
-      printf("Key is pressed\n");
-      /* Escape key */
-      if (event.data.key.key == 0x09) {
+  while (JIN_event_poll(&event)) {
+    switch (event.type) {
+      case JIN_EVENT_QUIT:
         active = 0;
+        break;
+      case JIN_EVENT_KEY:
+        break;
+      case JIN_EVENT_MOUSE:
+        break;
+      case JIN_EVENT_NONE:
+        break;
+    }
+
+    if (event.type == JIN_EVENT_KEY) {
+      if (event.data.key.type == JIN_EVENT_KEY_DOWN) {
+        /* Escape key */
+        if (event.data.key.key == 0x09) {
+          active = 0;
+        }
       }
     }
   }

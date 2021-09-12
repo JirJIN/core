@@ -10,6 +10,7 @@
  */
 
 enum JIN_Eventt {
+  JIN_EVENT_NONE, /* No event */
   JIN_EVENT_QUIT, /* Quit event */
   JIN_EVENT_KEY,  /* Keyboard event */
   JIN_EVENT_MOUSE /* Mouse event */

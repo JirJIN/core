@@ -11,8 +11,13 @@ int JIN_event_poll(struct JIN_Event *event)
 
   if (queue) {
     XNextEvent(JIN_env.x_display, &xevent);
-
+  
     switch (xevent.type) {
+      case ClientMessage:
+        if (xevent.xclient.data.l[0] == JIN_env.wm_delete_window) {
+          event->type = JIN_EVENT_QUIT;
+        }
+        break;
       case KeyPress:
         event->type = JIN_EVENT_KEY;
         event->data.key.type = JIN_EVENT_KEY_DOWN;
@@ -24,6 +29,9 @@ int JIN_event_poll(struct JIN_Event *event)
         event->data.key.key = xevent.xkey.keycode;
         break;
     }
+  }
+  else {
+    event->type = JIN_EVENT_NONE;
   }
 
   return queue;
