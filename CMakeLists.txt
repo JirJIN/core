@@ -27,7 +27,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 set(CORE_LIBS "")
 
 if (UNIX)
-  set(CORE_LIBS "X11")
+  set(CORE_LIBS "-lX11 -lGL -lGLEW")
 endif (UNIX)
 
 if (WIN32)

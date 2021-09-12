@@ -1,4 +1,5 @@
 #include "core.h"
+#include <GL/glew.h>
 
 /*
  * Useful links
@@ -29,7 +30,10 @@ int JIN_init(void)
 {
   JIN_env_init(&JIN_env);
   root = JIN_window_create();
-  
+  if (glewInit() != GLEW_OK) {
+    return -1;
+  }
+
   active = 1;
 
   return 0;
@@ -112,6 +116,11 @@ int JIN_update(void)
  */
 int JIN_draw(void)
 {
+  glClearColor(0.0f, 0.2f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  JIN_window_buffer_swap(root);
+
   return 0;
 }
 
