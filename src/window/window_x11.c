@@ -8,9 +8,11 @@
 #include <stdio.h>
 
 struct JIN_Window {
-  Window     window;
-  Screen    *screen;
-  GLXContext context;
+  Window               window;
+  Screen              *screen;
+  GLXContext           context;
+  XSetWindowAttributes attribs;
+  XVisualInfo         *visual;
 };
 
 /*
@@ -59,11 +61,118 @@ static int is_extension_supported(const char *extension_list, const char *extens
 }
 
 /*
- * TODO
+ * JIN_window_gl_setup
  *
- * Somehow move the OpenGL stuff to a different
- * function
+ * @desc
+ * @param window
+ * @param screen_id
+ * @return
  */
+static int JIN_window_gl_setup(struct JIN_Window *window, int screen_id)
+{
+  /* Check GLX Version */
+  GLint glx_major, glx_minor;
+  glXQueryVersion(JIN_env.x_display, &glx_major, &glx_minor);
+  if (glx_major <= 1 && glx_minor < 3) {
+    fprintf(stderr, "GLX 1.3 or greater is required\n");
+    return -1;
+  }
+
+  GLint glx_attribs[] = {
+    GLX_X_RENDERABLE,  True,
+    GLX_DRAWABLE_TYPE, GLX_RGBA_BIT,
+    GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+    GLX_RED_SIZE,      8,
+    GLX_GREEN_SIZE,    8,
+    GLX_BLUE_SIZE,     8,
+    GLX_ALPHA_SIZE,    8,
+    GLX_DEPTH_SIZE,    24,
+    GLX_STENCIL_SIZE,  8,
+    GLX_DOUBLEBUFFER,  True,
+    None
+  };
+
+  int fb_count;
+  GLXFBConfig *fb_configs = glXChooseFBConfig(JIN_env.x_display, screen_id, glx_attribs, &fb_count);
+  if (!fb_configs) {
+    fprintf(stderr, "Could not get framebuffer config\n");
+    return -1;
+  }
+
+  /* Pick the fb_config/visual with the most samples/pixel */
+  int fb_config_best = -1, fb_config_worst = -1;
+  int sample_best = -1, sample_worst = 999;
+  for (int i = 0; i < fb_count; ++i) {
+    XVisualInfo *vi;
+    int sample_buffer, samples;
+    
+    if (!(vi = glXGetVisualFromFBConfig(JIN_env.x_display, fb_configs[i]))) {
+      fprintf(stderr, "Could not get visual info\n");
+      return -1;
+    }
+
+    glXGetFBConfigAttrib(JIN_env.x_display, fb_configs[i], GLX_SAMPLE_BUFFERS, &sample_buffer);
+    glXGetFBConfigAttrib(JIN_env.x_display, fb_configs[i], GLX_SAMPLES,        &samples);
+
+    if (fb_config_best < 0 || (sample_buffer && samples > sample_best)) {
+      fb_config_best = i;
+      sample_best = samples;
+    }
+
+    if (fb_config_worst < 0 || !sample_buffer || samples < sample_worst) {
+      fb_config_worst = i;
+    }
+
+    sample_worst = samples;
+
+    XFree(vi);
+  }
+
+  GLXFBConfig fb_config = fb_configs[fb_config_best];
+  XFree(fb_configs);
+
+  if (!(window->visual = glXGetVisualFromFBConfig(JIN_env.x_display, fb_config))) {
+    fprintf(stderr, "Could not create a visual window\n");
+    return -1;
+  }
+
+  if (screen_id != window->visual->screen) {
+    fprintf(stderr, "Screen id does not match visual screen\n");
+    return -1;
+  }
+
+  /* Actually create the context */
+  GLXContext (*glx_create_context_attribs_arb)(Display *, GLXFBConfig, GLXContext, Bool, const int *) = NULL;
+  glx_create_context_attribs_arb = (GLXContext (*)(Display *, GLXFBConfig, GLXContext, Bool, const int *)) glXGetProcAddressARB((const GLubyte *) "glXCreateContextAttribsARB");
+  if (!glx_create_context_attribs_arb) {
+    fprintf(stderr, "glXCreateContextAttribsARB() not found \n");
+  }
+
+  const char *glx_extensions = glXQueryExtensionsString(JIN_env.x_display, screen_id);
+  
+  int context_attribs[] = {
+    GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+    GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+    GLX_CONTEXT_FLAGS_ARB,         GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+    None
+  };
+
+  if (!is_extension_supported(glx_extensions, "GLX_ARB_createcontext")) {
+    window->context = glx_create_context_attribs_arb(JIN_env.x_display, fb_config, 0, True, context_attribs);
+  }
+  else {
+    window->context = glx_create_context_attribs_arb(JIN_env.x_display, fb_config, 0, True, context_attribs);
+  }
+  XSync(JIN_env.x_display, False);
+
+  /* Check if the context is direct */
+  if (!glXIsDirect(JIN_env.x_display, window->context)) {
+    fprintf(stderr, "GLX context is not direct");
+  }
+
+  return 0;
+}
+
 struct JIN_Window * JIN_window_create(void)
 {
   int screen_id;
@@ -77,109 +186,23 @@ struct JIN_Window * JIN_window_create(void)
   window->screen = XDefaultScreenOfDisplay(JIN_env.x_display);
   screen_id = XDefaultScreen(JIN_env.x_display);
 
-  /* Check GLX Version */
-  GLint glx_major, glx_minor;
-  glXQueryVersion(JIN_env.x_display, &glx_major, &glx_minor);
-  if (glx_major <= 1 && glx_minor < 3) {
-    fprintf(stderr, "GLX 1.3 or greater is required\n");
-    return NULL;
-  }
-
-  GLint glx_attribs[] = {
-    GLX_X_RENDERABLE,  True,
-    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-    GLX_RENDER_TYPE,   GLX_RGBA_BIT,
-    GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-    GLX_RED_SIZE,      8,
-    GLX_GREEN_SIZE,    8,
-    GLX_BLUE_SIZE,     8,
-    GLX_ALPHA_SIZE,    8,
-    GLX_DEPTH_SIZE,    24,
-    GLX_STENCIL_SIZE,  8,
-    GLX_DOUBLEBUFFER,  True,
-    None
-  };
-
-  int fbcount;
-  GLXFBConfig *fbc = glXChooseFBConfig(JIN_env.x_display, screen_id, glx_attribs, &fbcount);
-  if (!fbc) {
-    fprintf(stderr, "Could not get framebuffer\n");
-    return NULL;
-  }
-
-  /* Pick the fb config/visual with the most samples/pixel */
-  int fbc_best = -1, fbc_worst = -1;
-  int samp_best = -1, samp_worst = 999;
-  for (int i = 0; i < fbcount; ++i) {
-    XVisualInfo *vi = glXGetVisualFromFBConfig(JIN_env.x_display, fbc[i]);
-    if (vi) {
-      int samp_buf, samples;
-      glXGetFBConfigAttrib(JIN_env.x_display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
-      glXGetFBConfigAttrib(JIN_env.x_display, fbc[i], GLX_SAMPLES,        &samples);
-
-      if (fbc_best < 0 || (samp_buf && samples > samp_best)) {
-        fbc_best = i;
-        samp_best = samples;
-      }
-      if (fbc_worst < 0 || !samp_buf || samples < samp_worst) {
-        fbc_worst = i;
-      }
-      samp_worst = samples;
-    }
-    XFree(vi);
-  }
-
-  GLXFBConfig best_fbc = fbc[fbc_best];
-  XFree(fbc);
-
-  XVisualInfo *visual = glXGetVisualFromFBConfig(JIN_env.x_display, best_fbc);
-
-  if (!visual) {
-    fprintf(stderr, "Could not create a visual window\n");
-    return NULL;
-  }
-
-  if (screen_id != visual->screen) {
-    fprintf(stderr, "Screen id does not match visual screen\n");
+  if (JIN_window_gl_setup(window, screen_id)) {
+    fprintf(stderr, "Could not set up OpenGL\n");
     return NULL;
   }
 
   /* Create the Window */
-  window->window = XCreateSimpleWindow(JIN_env.x_display, XRootWindowOfScreen(window->screen), 0, 0, 480, 320, 1, XBlackPixel(JIN_env.x_display, screen_id), XWhitePixel(JIN_env.x_display, screen_id));
+  window->attribs.border_pixel      = XBlackPixel(JIN_env.x_display, screen_id);
+  window->attribs.background_pixel  = XWhitePixel(JIN_env.x_display, screen_id);
+  window->attribs.override_redirect = True;
+  window->attribs.colormap          = XCreateColormap(JIN_env.x_display, RootWindow(JIN_env.x_display, screen_id), window->visual->visual, AllocNone);
+  window->attribs.event_mask        = ExposureMask;
+  window->window = XCreateWindow(JIN_env.x_display, RootWindow(JIN_env.x_display, screen_id), 0, 0, 480, 320, 0, window->visual->depth, InputOutput, window->visual->visual, CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &window->attribs);
 
   XSelectInput(JIN_env.x_display, window->window, KeyPressMask | KeyReleaseMask);
   XSetWMProtocols(JIN_env.x_display, window->window, &JIN_env.wm_delete_window, 1);
 
-  /* Create the GLX OpengGL Context */
-  //glxCreate
-
-  GLXContext (*glx_create_context_attribs_arb)(Display *, GLXFBConfig, GLXContext, Bool, const int *) = 0;
-  glx_create_context_attribs_arb = (GLXContext (*)(Display *, GLXFBConfig, GLXContext, Bool, const int *)) glXGetProcAddressARB( (const GLubyte *) "glXCreateCibtextAttribsARB");
-
-  const char *glx_extensions = glXQueryExtensionsString(JIN_env.x_display, screen_id);
-  if (!glx_create_context_attribs_arb) {
-    fprintf(stderr, "glXCreateContextAttribsARB() not found\n");
-  }
-
-  int context_attribs[] = {
-    GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-    GLX_CONTEXT_MINOR_VERSION_ARB, 2,
-    GLX_CONTEXT_FLAGS_ARB,         GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-    None
-  };
-
-  if (!is_extension_supported(glx_extensions, "GLX_ARB_createcontext")) {
-    window->context = glXCreateNewContext(JIN_env.x_display, best_fbc, GLX_RGBA_TYPE, 0, True);
-  }
-  else {
-    window->context = glx_create_context_attribs_arb(JIN_env.x_display, best_fbc, 0, True, context_attribs);
-  }
-  XSync(JIN_env.x_display, False);
-
-  /* Make sure context is a direct context */
-  if (!glXIsDirect(JIN_env.x_display, window->context)) {
-    fprintf(stderr, "GLX context is not direct");
-  }
+  /* Set the GLX OpengGL Context */
   glXMakeCurrent(JIN_env.x_display, window->window, window->context);
 
   /* Raise the window */
@@ -189,10 +212,17 @@ struct JIN_Window * JIN_window_create(void)
   return window;
 }
 
+/* 
+ * TODO
+ *
+ * Memory leaked:
+ */
 int JIN_window_destroy(struct JIN_Window *window)
 {
   glXDestroyContext(JIN_env.x_display, window->context);
 
+  XFree(window->visual);
+  XFreeColormap(JIN_env.x_display, window->attribs.colormap);
   XDestroyWindow(JIN_env.x_display, window->window);
  
   free(window);
