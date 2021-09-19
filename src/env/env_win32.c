@@ -6,10 +6,18 @@ LRESULT CALLBACK window_procedure(HWND hwnd, UINT u_msg, WPARAM w_param, LPARAM 
 {
   switch (u_msg) {
     case WM_DESTROY:
+      printf("Destroying window\n");
       PostQuitMessage(0);
+      return 0;
+    case WM_SIZE:
       return 0;
   }
   
+  return DefWindowProc(hwnd, u_msg, w_param, l_param);
+}
+
+LRESULT CALLBACK default_procedure(HWND hwnd, UINT u_msg, WPARAM w_param, LPARAM l_param)
+{
   return DefWindowProc(hwnd, u_msg, w_param, l_param);
 }
 
@@ -32,7 +40,25 @@ int JIN_env_init(struct JIN_Env* env)
   wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = NULL;
   wc.lpszMenuName  = NULL;
-  wc.lpszClassName = "TestThing";
+  wc.lpszClassName = "window_core";
+
+  if (!RegisterClass(&wc)) {
+    fprintf(stderr, "Could not register class. Error %d\n", GetLastError());
+    return -1;
+  }
+
+  /* Temp Window */
+
+  wc.style = CS_HREDRAW | CS_VREDRAW;
+  wc.lpfnWndProc = default_procedure;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  wc.hInstance = env->main_instance;
+  wc.hIcon = NULL;
+  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = NULL;
+  wc.lpszMenuName = NULL;
+  wc.lpszClassName = "window_temp";
 
   if (!RegisterClass(&wc)) {
     fprintf(stderr, "Could not register class. Error %d\n", GetLastError());

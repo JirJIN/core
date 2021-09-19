@@ -1,12 +1,136 @@
 #include "window.h"
 #include <Windows.h>
 #include "../env/env.h"
-
 #include <stdio.h>
+#include "glew/glew.h"
+#include "glew/wglew.h"
 
 struct JIN_Window {
   HWND handle;
+  HDC  device_context;
+  HGLRC rendering_context;
 };
+
+/*
+ * JIN_window_gl_setup
+ * 
+ * @desc
+ * @param window
+ * @return
+ */
+static int JIN_window_gl_setup(struct JIN_Window *window)
+{
+  /* Create the temp window/context */
+  HWND temp_window = CreateWindow("window_temp", "Temp Window", WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+    0, 0, 1, 1,
+    NULL, NULL, JIN_env.main_instance, NULL);
+  HDC temp_device_context = GetDC(temp_window);
+  PIXELFORMATDESCRIPTOR temp_pfd;
+  ZeroMemory(&temp_pfd, sizeof(temp_pfd));
+  temp_pfd.nSize = sizeof(temp_pfd);
+  temp_pfd.nVersion = 1;
+  temp_pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+  temp_pfd.iPixelType = PFD_TYPE_RGBA;
+  temp_pfd.cColorBits = 32;
+  temp_pfd.cAlphaBits = 8;
+  temp_pfd.cDepthBits = 24;
+
+  int temp_pfd_id = ChoosePixelFormat(temp_device_context, &temp_pfd);
+  if (!temp_pfd_id) {
+    fprintf(stderr, "ChoosePixelFormat failed\n");
+    return -1;
+  }
+
+  if (!SetPixelFormat(temp_device_context, temp_pfd_id, &temp_pfd)) {
+    fprintf(stderr, "SetPixelFormat failed\n");
+    return -1;
+  }
+
+  HGLRC temp_rc = wglCreateContext(temp_device_context);
+
+  if (!temp_rc) {
+    fprintf(stderr, "wglCreateContext failed\n");
+    return -1;
+  }
+
+  if (!wglMakeCurrent(temp_device_context, temp_rc)) {
+    fprintf(stderr, "wglMakeCurrent failed\n");
+    return -1;
+  }
+
+  PFNWGLCHOOSEPIXELFORMATARBPROC wgl_choose_pixel_format_arb = NULL;
+  wgl_choose_pixel_format_arb = (PFNWGLCHOOSEPIXELFORMATARBPROC) wglGetProcAddress("wglChoosePixelFormatARB");
+  if (!wgl_choose_pixel_format_arb) {
+    fprintf(stderr, "wglGetProcAddress failed\n");
+    return -1;
+  }
+
+  PFNWGLCREATECONTEXTATTRIBSARBPROC wgl_create_context_attribs_arb = NULL;
+  wgl_create_context_attribs_arb = (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
+  if (!wgl_create_context_attribs_arb) {
+    fprintf(stderr, "wglGetProcAddress failed\n");
+    return -1;
+  }
+
+  window->handle = CreateWindow("window_core", "Hay", WS_OVERLAPPEDWINDOW,
+    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+    NULL, NULL, JIN_env.main_instance, NULL);
+
+  window->device_context = GetDC(window->handle);
+
+  const int pixel_attribs[] = {
+    WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+    WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+    WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
+    WGL_PIXEL_TYPE_ARB,     WGL_TYPE_RGBA_ARB,
+    WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
+    WGL_COLOR_BITS_ARB,     32,
+    WGL_ALPHA_BITS_ARB,     8,
+    WGL_DEPTH_BITS_ARB,     24,
+    WGL_STENCIL_BITS_ARB,   8,
+    WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
+    WGL_SAMPLES_ARB,        4,
+    0
+  };
+
+  int pixel_format_id;
+  UINT formats_num;
+  int status = wgl_choose_pixel_format_arb(window->device_context, pixel_attribs, NULL, 1, &pixel_format_id, &formats_num);
+
+  if (!status || formats_num == 0) {
+    fprintf(stderr, "wgl_choose_pixel_format failed");
+    return -1;
+  }
+
+  PIXELFORMATDESCRIPTOR pfd;
+  DescribePixelFormat(window->device_context, pixel_format_id, sizeof(pfd), &pfd);
+  SetPixelFormat(window->device_context, pixel_format_id, &pfd);
+
+  const int version_major = 3, version_minor = 3;
+  int context_attribs[] = {
+    WGL_CONTEXT_MAJOR_VERSION_ARB, version_major,
+    WGL_CONTEXT_MINOR_VERSION_ARB, version_minor,
+    WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    0
+  };
+
+  HGLRC rc = wgl_create_context_attribs_arb(window->device_context, 0, context_attribs);
+  if (!rc) {
+    fprintf(stderr, "wgl_create_context_attribs_arb failed\n");
+    return -1;
+  }
+
+  wglMakeCurrent(NULL, NULL);
+  wglDeleteContext(temp_rc);
+  ReleaseDC(temp_window, temp_device_context);
+  DestroyWindow(temp_window);
+  if (!wglMakeCurrent(window->device_context, rc)) {
+    fprintf(stderr, "wglMakeCurrent failed \n");
+    return -1;
+  }
+
+  return 0;
+}
 
 struct JIN_Window * JIN_window_create(void)
 {
@@ -17,23 +141,28 @@ struct JIN_Window * JIN_window_create(void)
     return NULL;
   }
 
-  window->handle = CreateWindowEx(0, "TestThing", "Hay", WS_OVERLAPPEDWINDOW,
-    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-    NULL, NULL, JIN_env.main_instance, NULL);
-
-  if (!window->handle) {
-    fprintf(stderr, "Failed to create the window. Error code %d\n", GetLastError());
-    return 0;
-  }
+  JIN_window_gl_setup(window);
 
   ShowWindow(window->handle, SW_NORMAL);
 
   return window;
 }
 
-int JIN_window_destroy(struct JIN_Window* window)
+int JIN_window_destroy(struct JIN_Window *window)
 {
+  wglMakeCurrent(NULL, NULL);
+  wglDeleteContext(window->rendering_context);
+  ReleaseDC(window->handle, window->device_context);
+  DestroyWindow(window->handle);
+
   free(window);
+
+  return 0;
+}
+
+int JIN_window_buffer_swap(struct JIN_Window *window)
+{
+  SwapBuffers(window->device_context);
 
   return 0;
 }

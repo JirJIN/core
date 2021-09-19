@@ -26,11 +26,14 @@ struct JIN_Env     env; /* Environment variables */
  *    0 on success
  *   !0 on failure
  */
+#include <stdio.h>
 int JIN_init(void)
 {
   JIN_env_init(&JIN_env);
   root = JIN_window_create();
-  if (glewInit() != GLEW_OK) {
+  GLenum err;
+  if ((err = glewInit()) != GLEW_OK) {
+    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     return -1;
   }
 
@@ -116,10 +119,10 @@ int JIN_update(void)
  */
 int JIN_draw(void)
 {
-  //glClearColor(0.0f, 0.2f, 1.0f, 1.0f);
-  //glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(0.0f, 0.2f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
 
-  //JIN_window_buffer_swap(root);
+  JIN_window_buffer_swap(root);
 
   return 0;
 }
@@ -131,7 +134,7 @@ int JIN_draw(void)
  *   Check if the game is active
  * @return
  *   !0 if active
- *    0 if not acive
+ *    0 if not active
  */
 int JIN_active(void)
 {
