@@ -17,7 +17,10 @@ enum JIN_Eventt {
 };
 
 /* Keyboard events */
-
+/*
+ * Keyboard is bit complicated, going to
+ * try on Windows first
+ */
 enum JIN_EventKeyt {
   JIN_EVENT_KEY_UP,
   JIN_EVENT_KEY_DOWN

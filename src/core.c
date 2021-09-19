@@ -1,5 +1,5 @@
 #include "core.h"
-#include <GL/glew.h>
+#include "glew/glew.h"
 
 /*
  * Useful links
@@ -116,10 +116,10 @@ int JIN_update(void)
  */
 int JIN_draw(void)
 {
-  glClearColor(0.0f, 0.2f, 1.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  //glClearColor(0.0f, 0.2f, 1.0f, 1.0f);
+  //glClear(GL_COLOR_BUFFER_BIT);
 
-  JIN_window_buffer_swap(root);
+  //JIN_window_buffer_swap(root);
 
   return 0;
 }

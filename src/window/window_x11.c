@@ -219,6 +219,7 @@ struct JIN_Window * JIN_window_create(void)
  */
 int JIN_window_destroy(struct JIN_Window *window)
 {
+  glXMakeCurrent(JIN_env.x_display, None, NULL);
   glXDestroyContext(JIN_env.x_display, window->context);
 
   XFree(window->visual);
