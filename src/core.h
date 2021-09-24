@@ -1,6 +1,8 @@
 #ifndef JIN_CORE_H
 #define JIN_CORE_H
 
+#include "input/input.h"
+
 /*
  * CORE
  *
@@ -8,6 +10,9 @@
  *
  * Only gonna make for linux and windows
  */
+
+extern struct JIN_Input JIN_inputv; /* Volatile Input */
+extern struct JIN_Input JIN_input; /* "Frame" Input */
 
 /*
  * Core functions
@@ -22,7 +27,8 @@
 int JIN_init(void);
 int JIN_quit(void);
 
-int JIN_input (void);
+//int JIN_input (void);
+int JIN_tick  (void);
 int JIN_update(void);
 int JIN_draw  (void);
 int JIN_active(void);

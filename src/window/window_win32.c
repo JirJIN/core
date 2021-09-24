@@ -18,6 +18,7 @@ struct JIN_Window {
  * @param window
  * @return
  */
+PFNWGLCREATECONTEXTATTRIBSARBPROC wgl_create_context_attribs_arb = NULL;
 static int JIN_window_gl_setup(struct JIN_Window *window)
 {
   /* Create the temp window/context */
@@ -65,7 +66,7 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
     return -1;
   }
 
-  PFNWGLCREATECONTEXTATTRIBSARBPROC wgl_create_context_attribs_arb = NULL;
+  //PFNWGLCREATECONTEXTATTRIBSARBPROC wgl_create_context_attribs_arb = NULL;
   wgl_create_context_attribs_arb = (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
   if (!wgl_create_context_attribs_arb) {
     fprintf(stderr, "wglGetProcAddress failed\n");
@@ -106,28 +107,10 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
   DescribePixelFormat(window->device_context, pixel_format_id, sizeof(pfd), &pfd);
   SetPixelFormat(window->device_context, pixel_format_id, &pfd);
 
-  const int version_major = 3, version_minor = 3;
-  int context_attribs[] = {
-    WGL_CONTEXT_MAJOR_VERSION_ARB, version_major,
-    WGL_CONTEXT_MINOR_VERSION_ARB, version_minor,
-    WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-    0
-  };
-
-  HGLRC rc = wgl_create_context_attribs_arb(window->device_context, 0, context_attribs);
-  if (!rc) {
-    fprintf(stderr, "wgl_create_context_attribs_arb failed\n");
-    return -1;
-  }
-
   wglMakeCurrent(NULL, NULL);
   wglDeleteContext(temp_rc);
   ReleaseDC(temp_window, temp_device_context);
   DestroyWindow(temp_window);
-  if (!wglMakeCurrent(window->device_context, rc)) {
-    fprintf(stderr, "wglMakeCurrent failed \n");
-    return -1;
-  }
 
   return 0;
 }
@@ -163,6 +146,29 @@ int JIN_window_destroy(struct JIN_Window *window)
 int JIN_window_buffer_swap(struct JIN_Window *window)
 {
   SwapBuffers(window->device_context);
+
+  return 0;
+}
+
+int JIN_window_make_current(struct JIN_Window *window)
+{
+  const int version_major = 3, version_minor = 3;
+  int context_attribs[] = {
+    WGL_CONTEXT_MAJOR_VERSION_ARB, version_major,
+    WGL_CONTEXT_MINOR_VERSION_ARB, version_minor,
+    WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    0
+  };
+
+  HGLRC rc = wgl_create_context_attribs_arb(window->device_context, 0, context_attribs);
+  if (!rc) {
+    fprintf(stderr, "wgl_create_context_attribs_arb failed\n");
+    return -1;
+  }
+  if (!wglMakeCurrent(window->device_context, rc)) {
+    fprintf(stderr, "wglMakeCurrent failed \n");
+    return -1;
+  }
 
   return 0;
 }

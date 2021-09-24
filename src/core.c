@@ -1,5 +1,7 @@
 #include "core.h"
 #include "glew/glew.h"
+#include "time.h"
+#include "thread/thread.h"
 
 /*
  * Useful links
@@ -14,6 +16,9 @@
 struct JIN_Window *root; /* Root window */
 int                active;
 struct JIN_Env     env; /* Environment variables */
+
+struct JIN_Input JIN_inputv;
+struct JIN_Input JIN_input;
 
 /* CORE FUNCTIONS */
 
@@ -31,11 +36,9 @@ int JIN_init(void)
 {
   JIN_env_init(&JIN_env);
   root = JIN_window_create();
-  GLenum err;
-  if ((err = glewInit()) != GLEW_OK) {
-    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-    return -1;
-  }
+
+  JIN_INPUT_INIT(JIN_inputv);
+  JIN_INPUT_INIT(JIN_input);
 
   active = 1;
 
@@ -58,6 +61,29 @@ int JIN_quit(void)
   return 0;
 }
 
+#define FPS         30
+#define FRAME_DELAY (1000 / FPS)
+int JIN_tick(void)
+{
+  clock_t frame_start, frame_end;
+  double  frame_time;
+
+  frame_start = clock();
+
+  JIN_input = JIN_inputv;
+  JIN_update();
+  JIN_draw();
+
+  frame_end = clock();
+  frame_time = (frame_end - frame_start) / CLOCKS_PER_SEC / 1000;
+
+  if (FRAME_DELAY > frame_time) {
+    JIN_sleep(FRAME_DELAY - frame_time);
+  }
+
+  return 0;
+}
+
 /*
  * JIN_input
  *
@@ -67,6 +93,7 @@ int JIN_quit(void)
  *    0 on success
  *   !0 on failure
  */
+/*
 int JIN_input(void)
 {
   struct JIN_Event event;
@@ -85,7 +112,6 @@ int JIN_input(void)
 
     if (event.type == JIN_EVENT_KEY) {
       if (event.data.key.type == JIN_EVENT_KEY_DOWN) {
-        /* Escape key */
         if (event.data.key.key == 0x09) {
           active = 0;
         }
@@ -95,6 +121,7 @@ int JIN_input(void)
 
   return 0;
 }
+*/
 
 /*
  * JIN_update
@@ -123,6 +150,8 @@ int JIN_draw(void)
   glClear(GL_COLOR_BUFFER_BIT);
 
   JIN_window_buffer_swap(root);
+
+  //printf("Drawn\n");
 
   return 0;
 }
