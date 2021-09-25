@@ -4,6 +4,8 @@
 
 int JIN_env_init(struct JIN_Env *env)
 {
+  XInitThreads();
+
   if (!(env->x_display = XOpenDisplay(NULL))) {
     fprintf(stderr, "Could not open a display (X11)");
     return -1;

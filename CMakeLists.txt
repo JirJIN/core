@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
   ${CMAKE_CURRENT_LIST_DIR}/src/driver.c
   ${CMAKE_CURRENT_LIST_DIR}/src/env/env.c
   ${CMAKE_CURRENT_LIST_DIR}/src/event/event.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/input/input.c
   ${CMAKE_CURRENT_LIST_DIR}/src/thread/thread.c
   ${CMAKE_CURRENT_LIST_DIR}/src/window/window.c
 
@@ -31,7 +32,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 set(CORE_LIBS "")
 
 if (UNIX)
-  set(CORE_LIBS "-lX11 -lGL")
+  set(CORE_LIBS "-lX11 -lGL -pthread")
 endif (UNIX)
 
 if (WIN32)

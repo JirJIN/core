@@ -14,7 +14,6 @@
 #include "env/env.h"
 
 struct JIN_Window *root; /* Root window */
-int                active;
 struct JIN_Env     env; /* Environment variables */
 
 struct JIN_Input JIN_inputv;
@@ -31,7 +30,6 @@ struct JIN_Input JIN_input;
  *    0 on success
  *   !0 on failure
  */
-#include <stdio.h>
 int JIN_init(void)
 {
   JIN_env_init(&JIN_env);
@@ -39,8 +37,6 @@ int JIN_init(void)
 
   JIN_INPUT_INIT(JIN_inputv);
   JIN_INPUT_INIT(JIN_input);
-
-  active = 1;
 
   return 0;
 }
@@ -85,45 +81,6 @@ int JIN_tick(void)
 }
 
 /*
- * JIN_input
- *
- * @desc
- *   Handle input
- * @return
- *    0 on success
- *   !0 on failure
- */
-/*
-int JIN_input(void)
-{
-  struct JIN_Event event;
-  while (JIN_event_poll(&event)) {
-    switch (event.type) {
-      case JIN_EVENT_QUIT:
-        active = 0;
-        break;
-      case JIN_EVENT_KEY:
-        break;
-      case JIN_EVENT_MOUSE:
-        break;
-      case JIN_EVENT_NONE:
-        break;
-    }
-
-    if (event.type == JIN_EVENT_KEY) {
-      if (event.data.key.type == JIN_EVENT_KEY_DOWN) {
-        if (event.data.key.key == 0x09) {
-          active = 0;
-        }
-      }
-    }
-  }
-
-  return 0;
-}
-*/
-
-/*
  * JIN_update
  * 
  * @desc
@@ -151,23 +108,7 @@ int JIN_draw(void)
 
   JIN_window_buffer_swap(root);
 
-  //printf("Drawn\n");
-
   return 0;
-}
-
-/*
- * JIN_active
- *
- * @desc
- *   Check if the game is active
- * @return
- *   !0 if active
- *    0 if not active
- */
-int JIN_active(void)
-{
-  return active;
 }
 
 /*

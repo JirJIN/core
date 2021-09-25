@@ -201,9 +201,12 @@ struct JIN_Window * JIN_window_create(void)
 
   XSelectInput(JIN_env.x_display, window->window, KeyPressMask | KeyReleaseMask);
   XSetWMProtocols(JIN_env.x_display, window->window, &JIN_env.wm_delete_window, 1);
-
-  /* Set the GLX OpengGL Context */
-  glXMakeCurrent(JIN_env.x_display, window->window, window->context);
+  XSizeHints hints;
+  hints.flags = PMinSize | PMaxSize | PResizeInc;
+  hints.min_width  = hints.max_width  = 480;
+  hints.min_height = hints.max_height = 320;
+  hints.width_inc  = hints.height_inc = 0;
+  XSetWMNormalHints(JIN_env.x_display, window->window, &hints);
 
   /* Raise the window */
   XClearWindow(JIN_env.x_display, window->window);
@@ -235,5 +238,13 @@ int JIN_window_buffer_swap(struct JIN_Window *window)
 {
   glXSwapBuffers(JIN_env.x_display, window->window);
 
+  return 0;
+}
+
+int JIN_window_make_current(struct JIN_Window *window)
+{
+  /* Set the GLX OpengGL Context */
+  glXMakeCurrent(JIN_env.x_display, window->window, window->context);
+  
   return 0;
 }

@@ -22,16 +22,13 @@ extern struct JIN_Input JIN_input; /* "Frame" Input */
  * input  | Receive input
  * update | Game logic
  * draw   | Draw to the window
- * active | Check if the game is active
  */
 int JIN_init(void);
 int JIN_quit(void);
 
-//int JIN_input (void);
 int JIN_tick  (void);
 int JIN_update(void);
 int JIN_draw  (void);
-int JIN_active(void);
 
 int JIN_dialog(const char *msg);
 

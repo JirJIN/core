@@ -48,6 +48,14 @@ int                 JIN_window_destroy(struct JIN_Window *);
  */
 int                 JIN_window_buffer_swap(struct JIN_Window *);
 
+/*
+ * JIN_window_make_current
+ *
+ * @desc
+ *   Sets a current OpenGL context
+ * @param
+ * @return
+ */
 int                 JIN_window_make_current(struct JIN_Window *);
 
 #endif
