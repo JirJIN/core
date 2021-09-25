@@ -73,7 +73,7 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
     return -1;
   }
 
-  window->handle = CreateWindow("window_core", "Hay", WS_OVERLAPPEDWINDOW,
+  window->handle = CreateWindow("window_core", "Hay", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
     NULL, NULL, JIN_env.main_instance, NULL);
 

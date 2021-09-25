@@ -6,11 +6,7 @@ LRESULT CALLBACK window_procedure(HWND hwnd, UINT u_msg, WPARAM w_param, LPARAM 
 {
   switch (u_msg) {
     case WM_DESTROY:
-      printf("Destroying window\n");
       PostQuitMessage(0);
-      return 0;
-    case WM_SIZE:
-      printf("Need to paint\n");
       return 0;
   }
   
@@ -32,7 +28,7 @@ int JIN_env_init(struct JIN_Env* env)
   /* Register a window class */
   WNDCLASS wc;
 
-  wc.style         = 0; //CS_HREDRAW | CS_VREDRAW;
+  wc.style         = 0;
   wc.lpfnWndProc   = window_procedure;
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = 0;

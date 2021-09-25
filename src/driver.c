@@ -37,13 +37,12 @@ int main(int argc, char *args[])
 {
   JIN_init();
 
-  printf("Creating game thread\n");
   HANDLE game_thread_id;
   if (!(game_thread_id = (HANDLE) _beginthreadex(NULL, 0, game_thread, NULL, 0, NULL))) {
     fprintf(stderr, "Could not create a thread\n");
+    return -1;
   }
 
-  printf("Starting window loop\n");
   MSG msg;
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
@@ -58,9 +57,6 @@ int main(int argc, char *args[])
   WaitForSingleObject(game_thread_id, INFINITE);
 
   JIN_quit();
-
-  //printf("Type something to quit\n");
-  //getchar();
 
   return 0;
 }
