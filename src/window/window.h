@@ -26,7 +26,7 @@ struct JIN_Window;
  *   Pointer to window on success
  *   NULL on failure
  */
-struct JIN_Window * JIN_window_create (void);
+struct JIN_Window * JIN_window_create     (void);
 
 /*
  * JIN_window_destroy
@@ -36,7 +36,7 @@ struct JIN_Window * JIN_window_create (void);
  * @return
  *   0 on success
  */
-int                 JIN_window_destroy(struct JIN_Window *);
+int                 JIN_window_destroy    (struct JIN_Window *);
 
 /*
  * JIN_window_buffer_swap
@@ -56,6 +56,7 @@ int                 JIN_window_buffer_swap(struct JIN_Window *);
  * @param
  * @return
  */
-int                 JIN_window_make_current(struct JIN_Window *);
+int                 JIN_window_gl_set     (struct JIN_Window *);
+int                 JIN_window_gl_unset   (struct JIN_Window *);
 
 #endif

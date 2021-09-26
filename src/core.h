@@ -2,6 +2,7 @@
 #define JIN_CORE_H
 
 #include "input/input.h"
+#include "thread/thread.h"
 
 /*
  * CORE
@@ -29,6 +30,8 @@ int JIN_quit(void);
 int JIN_tick  (void);
 int JIN_update(void);
 int JIN_draw  (void);
+
+JIN_THREAD_FN JIN_game_thread(void *data);
 
 int JIN_dialog(const char *msg);
 
