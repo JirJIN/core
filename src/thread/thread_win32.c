@@ -6,6 +6,7 @@ struct JIN_Thread {
   HANDLE handle;
 };
 
+#include <stdio.h>
 struct JIN_Thread * JIN_thread_create(JIN_THREAD_FN (*fn)(void *))
 {
   struct JIN_Thread *thread;

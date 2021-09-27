@@ -74,7 +74,7 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
   }
 
   window->handle = CreateWindow("window_core", "Hay", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+    CW_USEDEFAULT, CW_USEDEFAULT, 640, 480,
     NULL, NULL, JIN_env.main_instance, NULL);
 
   window->device_context = GetDC(window->handle);
@@ -150,7 +150,7 @@ int JIN_window_buffer_swap(struct JIN_Window *window)
   return 0;
 }
 
-int JIN_window_make_current(struct JIN_Window *window)
+int JIN_window_gl_set(struct JIN_Window *window)
 {
   const int version_major = 3, version_minor = 3;
   int context_attribs[] = {
@@ -170,5 +170,11 @@ int JIN_window_make_current(struct JIN_Window *window)
     return -1;
   }
 
+  return 0;
+}
+
+int JIN_window_gl_unset(struct JIN_Window* window)
+{
+  /* This is a TODO */
   return 0;
 }
