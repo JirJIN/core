@@ -7,12 +7,19 @@
  * All input information
  */
 
-struct JIN_Input {
-  int quit;
+struct JIN_Keys {
+  int f1;
+  int f2;
+  int a;
+  int d;
+  int s;
+  int w;
 };
 
-#define JIN_INPUT_INIT(input) \
-  input.quit = 0;
+struct JIN_Input {
+  int quit;
+  struct JIN_Keys keys;
+};
 
 /*
  * JIN_input_loop

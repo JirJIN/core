@@ -3,21 +3,14 @@
 #include "time.h"
 #include "thread/thread.h"
 
-/*
- * Useful links
- * https://github.com/gamedevtech/X11OpenGLWindow
- * https://mariuszbartosik.com/opengl-4-x-initialization-in-windows-without-a-framework/
- */
-
 #include "window/window.h"
-#include "event/event.h"
 #include "env/env.h"
 
 struct JIN_Window *root; /* Root window */
 struct JIN_Env     env; /* Environment variables */
 
-struct JIN_Input JIN_inputv;
-struct JIN_Input JIN_input;
+struct JIN_Input JIN_inputv = {0};
+struct JIN_Input JIN_input  = {0};
 
 /* CORE FUNCTIONS */
 
@@ -34,9 +27,6 @@ int JIN_init(void)
 {
   JIN_env_init(&JIN_env);
   root = JIN_window_create();
-
-  JIN_INPUT_INIT(JIN_inputv);
-  JIN_INPUT_INIT(JIN_input);
 
   return 0;
 }
@@ -68,7 +58,7 @@ int JIN_tick(void)
 
   JIN_input = JIN_inputv;
   JIN_update();
-  //JIN_draw(); temporary shut off to see if triangle works
+  JIN_draw();
 
   frame_end = clock();
   frame_time = (frame_end - frame_start) / CLOCKS_PER_SEC / 1000;
@@ -80,6 +70,8 @@ int JIN_tick(void)
   return 0;
 }
 
+float r, g, b;
+
 /*
  * JIN_update
  * 
@@ -90,6 +82,13 @@ int JIN_tick(void)
  */
 int JIN_update(void)
 {
+  if (JIN_input.keys.f1) {
+    r = 0.2f, g = 0.3f, b = 0.3f;
+  }
+  if (JIN_input.keys.f2) {
+    r = 0.2f, g = 0.6f, b = 0.8f;
+  }
+
   return 0;
 }
 
@@ -101,30 +100,22 @@ int JIN_update(void)
  * @return
  *   0 on success
  */
+unsigned int VAO;
+unsigned int shaderProgram;
 int JIN_draw(void)
 {
-  glClearColor(0.0f, 0.2f, 1.0f, 1.0f);
+  glClearColor(r, g, b, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
+
+        // draw our first triangle
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        JIN_window_buffer_swap(root);
 
   JIN_window_buffer_swap(root);
 
-  return 0;
-}
-
-/*
- * JIN_dialog
- *
- * @desc
- *   Create a dialog (pop-up box)
- *   to display a message to the user
- * @param msg
- *   String to display
- * @return
- *    0 on success
- *   !0 on failure
- */
-int JIN_dialog(const char *msg)
-{
   return 0;
 }
 
@@ -186,7 +177,7 @@ JIN_THREAD_FN JIN_game_thread(void *data)
         printf("Shader compilation failed: %s\n", infoLog);
     }
     // link shaders
-    unsigned int shaderProgram = glCreateProgram();
+    shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
@@ -206,7 +197,7 @@ JIN_THREAD_FN JIN_game_thread(void *data)
          0.5f, -0.5f, 0.0f,  // bottom right
         -0.5f, -0.5f, 0.0f,  // bottom left
     };
-    unsigned int VBO, VAO;
+    unsigned int VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
@@ -225,15 +216,7 @@ JIN_THREAD_FN JIN_game_thread(void *data)
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // draw our first triangle
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        JIN_window_buffer_swap(root);
+  r = 0.2f, g = 0.3f, b = 0.3f;
 
   while (1) {
     if (JIN_input.quit) break;
