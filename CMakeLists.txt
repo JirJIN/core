@@ -35,6 +35,7 @@ if (UNIX)
 endif (UNIX)
 
 if (WIN32)
+  set(CORE_LIBS "opengl32")
 endif (WIN32)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CORE_LIBS})
