@@ -88,6 +88,12 @@ int JIN_update(void)
   if (JIN_input.keys.f2) {
     r = 0.2f, g = 0.6f, b = 0.8f;
   }
+  if (JIN_input.keys.f3) {
+    JIN_window_size_set(root, 480, 320);
+  }
+  if (JIN_input.keys.f4) {
+    JIN_window_size_set(root, 960, 640);
+  }
 
   return 0;
 }
@@ -106,6 +112,10 @@ int JIN_draw(void)
 {
   glClearColor(r, g, b, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
+
+  int w, h;
+  JIN_window_size_get(root, &w, &h);
+  glViewport(0, 0, w, h);
 
         // draw our first triangle
         glUseProgram(shaderProgram);

@@ -10,6 +10,8 @@
 #define SYM_LIST \
   X(f1, XK_F1) \
   X(f2, XK_F2) \
+  X(f3, XK_F3) \
+  X(f4, XK_F4) \
   X(a,  XK_a) \
   X(d,  XK_d) \
   X(s,  XK_s) \

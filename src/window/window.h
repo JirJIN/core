@@ -59,4 +59,7 @@ int                 JIN_window_buffer_swap(struct JIN_Window *);
 int                 JIN_window_gl_set     (struct JIN_Window *);
 int                 JIN_window_gl_unset   (struct JIN_Window *);
 
+int                 JIN_window_size_set   (struct JIN_Window *window, int x, int y);
+int                 JIN_window_size_get   (struct JIN_Window *window, int *x, int *y);
+
 #endif

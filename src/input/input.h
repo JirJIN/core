@@ -10,6 +10,8 @@
 struct JIN_Keys {
   int f1;
   int f2;
+  int f3;
+  int f4;
   int a;
   int d;
   int s;

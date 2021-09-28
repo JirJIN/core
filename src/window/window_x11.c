@@ -84,7 +84,8 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
 
   GLint glx_attribs[] = {
     GLX_X_RENDERABLE,  True,
-    GLX_DRAWABLE_TYPE, GLX_RGBA_BIT,
+    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+    GLX_RENDER_TYPE,   GLX_RGBA_BIT,
     GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
     GLX_RED_SIZE,      8,
     GLX_GREEN_SIZE,    8,
@@ -251,6 +252,27 @@ int JIN_window_gl_unset(struct JIN_Window *window)
 {
   glXMakeCurrent(JIN_env.x_display, None, NULL);
   glXDestroyContext(JIN_env.x_display, window->context);
+
+  return 0;
+}
+
+int JIN_window_size_set(struct JIN_Window *window, int x, int y)
+{
+  XSizeHints hints;
+  hints.flags = PMinSize | PMaxSize;
+  hints.min_width  = hints.max_width  = x;
+  hints.min_height = hints.max_height = y;
+  XSetWMNormalHints(JIN_env.x_display, window->window, &hints);
+  
+  return 0;
+}
+
+int JIN_window_size_get(struct JIN_Window *window, int *x, int *y)
+{
+  XWindowAttributes attribs;
+  XGetWindowAttributes(JIN_env.x_display, window->window, &attribs);
+  *x = attribs.width;
+  *y = attribs.height;
 
   return 0;
 }
