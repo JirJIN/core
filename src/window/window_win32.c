@@ -73,8 +73,10 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
     return -1;
   }
 
+  RECT wr = { 0, 0, 640, 480 };
+  AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
   window->handle = CreateWindow("window_core", "Hay", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-    CW_USEDEFAULT, CW_USEDEFAULT, 640, 480,
+    CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
     NULL, NULL, JIN_env.main_instance, NULL);
 
   window->device_context = GetDC(window->handle);
@@ -173,8 +175,29 @@ int JIN_window_gl_set(struct JIN_Window *window)
   return 0;
 }
 
-int JIN_window_gl_unset(struct JIN_Window* window)
+int JIN_window_gl_unset(struct JIN_Window *window)
 {
   /* This is a TODO */
+  return 0;
+}
+
+int JIN_window_size_set(struct JIN_Window *window, int w, int h)
+{
+  RECT wr = { 0, 0, w, h };
+  AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
+
+  SetWindowPos(window->handle, NULL, 0, 0, wr.right - wr.left, wr.bottom - wr.top, SWP_NOMOVE | SWP_NOZORDER);
+
+  return 0;
+}
+
+int JIN_window_size_get(struct JIN_Window *window, int *w, int *h)
+{
+  RECT rect;
+  GetWindowRect(window->handle, &rect);
+
+  *w = rect.right - rect.left;
+  *h = rect.bottom - rect.top;
+
   return 0;
 }
