@@ -228,6 +228,8 @@ JIN_THREAD_FN JIN_game_thread(void *data)
 
   r = 0.2f, g = 0.3f, b = 0.3f;
 
+  JIN_dialog("Starting game loop");
+
   while (1) {
     if (JIN_input.quit) break;
     JIN_tick();
@@ -235,5 +237,11 @@ JIN_THREAD_FN JIN_game_thread(void *data)
 
   JIN_window_gl_unset(root);
 
+  return 0;
+}
+
+int JIN_dialog(const char* msg)
+{
+  JIN_window_dialog(root, msg);
   return 0;
 }

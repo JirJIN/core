@@ -201,3 +201,10 @@ int JIN_window_size_get(struct JIN_Window *window, int *w, int *h)
 
   return 0;
 }
+
+int JIN_window_dialog(struct JIN_Window* window, const char* msg)
+{
+  MessageBox(window->handle, msg, NULL, MB_OK | MB_SYSTEMMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR);
+
+  return 0;
+}
