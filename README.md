@@ -13,3 +13,11 @@ The goals
 - Create OpenGL Context
 - Handle events
 - Create dialog boxes
+
+## Known Issues
+
+### X11
+When minimizing a window with a dialog, and opening it again, the main window has a little animation
+when popping up but the dialog just shows
+
+When closing a dialog, for an instant there is corrupted video data on the window (If dialog'ed before the 2nd tick)

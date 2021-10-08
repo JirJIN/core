@@ -228,7 +228,10 @@ JIN_THREAD_FN JIN_game_thread(void *data)
 
   r = 0.2f, g = 0.3f, b = 0.3f;
 
+  JIN_tick();
   JIN_dialog("Starting game loop");
+  JIN_tick();
+  JIN_dialog("Really long string. Let's try to get some overflow and see what happens...");
 
   while (1) {
     if (JIN_input.quit) break;

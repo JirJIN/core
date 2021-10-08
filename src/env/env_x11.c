@@ -15,13 +15,17 @@ int JIN_env_init(struct JIN_Env *env)
   XInitThreads();
 
   if (!(env->x_display = XOpenDisplay(NULL))) {
-    fprintf(stderr, "Could not open a display (X11)");
+    fprintf(stderr, "Could not open a display (X11)\n");
     return -1;
   }
   XSetErrorHandler(error_handler);
 
   env->screen_id = XDefaultScreen(env->x_display);
-  
+
+  env->gc = XDefaultGC(env->x_display, env->screen_id);
+  env->font = XLoadQueryFont(env->x_display, "fixed");
+  XSetFont(env->x_display, env->gc, env->font->fid);
+
   env->border_pixel      = XBlackPixel(env->x_display, env->screen_id);
   env->background_pixel  = XWhitePixel(env->x_display, env->screen_id);
   
