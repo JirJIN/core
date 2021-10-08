@@ -20,6 +20,11 @@ int JIN_env_init(struct JIN_Env *env)
   }
   XSetErrorHandler(error_handler);
 
+  env->screen_id = XDefaultScreen(env->x_display);
+  
+  env->border_pixel      = XBlackPixel(env->x_display, env->screen_id);
+  env->background_pixel  = XWhitePixel(env->x_display, env->screen_id);
+  
   env->wm_delete_window = XInternAtom(env->x_display, "WM_DELETE_WINDOW", False);
 
   return 0;

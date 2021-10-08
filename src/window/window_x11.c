@@ -1,5 +1,6 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <stdlib.h>
 #include "../env/env.h"
 #include <string.h>
@@ -14,7 +15,6 @@ struct JIN_Window {
   GLXContext           context;
   XSetWindowAttributes attribs;
   XVisualInfo         *visual;
-  int                  screen_id;
   GLXFBConfig          fb_config;
 };
 
@@ -71,34 +71,10 @@ static int is_extension_supported(const char *extension_list, const char *extens
  * @param screen_id
  * @return
  */
-GLXContext (*glx_create_context_attribs_arb)(Display *, GLXFBConfig, GLXContext, Bool, const int *) = NULL;
-static int JIN_window_gl_setup(struct JIN_Window *window)
+static int get_best_fb(struct JIN_Window *window, GLint *glx_attribs)
 {
-  /* Check GLX Version */
-  GLint glx_major, glx_minor;
-  glXQueryVersion(JIN_env.x_display, &glx_major, &glx_minor);
-  if (glx_major <= 1 && glx_minor < 3) {
-    fprintf(stderr, "GLX 1.3 or greater is required\n");
-    return -1;
-  }
-
-  GLint glx_attribs[] = {
-    GLX_X_RENDERABLE,  True,
-    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-    GLX_RENDER_TYPE,   GLX_RGBA_BIT,
-    GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-    GLX_RED_SIZE,      8,
-    GLX_GREEN_SIZE,    8,
-    GLX_BLUE_SIZE,     8,
-    GLX_ALPHA_SIZE,    8,
-    GLX_DEPTH_SIZE,    24,
-    GLX_STENCIL_SIZE,  8,
-    GLX_DOUBLEBUFFER,  True,
-    None
-  };
-
   int fb_count;
-  GLXFBConfig *fb_configs = glXChooseFBConfig(JIN_env.x_display, window->screen_id, glx_attribs, &fb_count);
+  GLXFBConfig *fb_configs = glXChooseFBConfig(JIN_env.x_display, JIN_env.screen_id, glx_attribs, &fb_count);
   if (!fb_configs) {
     fprintf(stderr, "Could not get framebuffer config\n");
     return -1;
@@ -136,12 +112,42 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
   window->fb_config = fb_configs[fb_config_best];
   XFree(fb_configs);
 
+  return 0;
+}
+GLXContext (*glx_create_context_attribs_arb)(Display *, GLXFBConfig, GLXContext, Bool, const int *) = NULL;
+static int JIN_window_gl_setup(struct JIN_Window *window)
+{
+  /* Check GLX Version */
+  GLint glx_major, glx_minor;
+  glXQueryVersion(JIN_env.x_display, &glx_major, &glx_minor);
+  if (glx_major <= 1 && glx_minor < 3) {
+    fprintf(stderr, "GLX 1.3 or greater is required\n");
+    return -1;
+  }
+
+  GLint glx_attribs[] = {
+    GLX_X_RENDERABLE,  True,
+    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+    GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+    GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+    GLX_RED_SIZE,      8,
+    GLX_GREEN_SIZE,    8,
+    GLX_BLUE_SIZE,     8,
+    GLX_ALPHA_SIZE,    8,
+    GLX_DEPTH_SIZE,    24,
+    GLX_STENCIL_SIZE,  8,
+    GLX_DOUBLEBUFFER,  True,
+    None
+  };
+
+  get_best_fb(window, glx_attribs);
+
   if (!(window->visual = glXGetVisualFromFBConfig(JIN_env.x_display, window->fb_config))) {
     fprintf(stderr, "Could not create a visual window\n");
     return -1;
   }
 
-  if (window->screen_id != window->visual->screen) {
+  if (JIN_env.screen_id != window->visual->screen) {
     fprintf(stderr, "Screen id does not match visual screen\n");
     return -1;
   }
@@ -165,7 +171,6 @@ struct JIN_Window * JIN_window_create(void)
   }
 
   window->screen = XDefaultScreenOfDisplay(JIN_env.x_display);
-  window->screen_id = XDefaultScreen(JIN_env.x_display);
 
   if (JIN_window_gl_setup(window)) {
     fprintf(stderr, "Could not set up OpenGL\n");
@@ -173,12 +178,12 @@ struct JIN_Window * JIN_window_create(void)
   }
 
   /* Create the Window */
-  window->attribs.border_pixel      = XBlackPixel(JIN_env.x_display, window->screen_id);
-  window->attribs.background_pixel  = XWhitePixel(JIN_env.x_display, window->screen_id);
+  window->attribs.border_pixel      = JIN_env.border_pixel;
+  window->attribs.background_pixel  = JIN_env.background_pixel;
   window->attribs.override_redirect = True;
-  window->attribs.colormap          = XCreateColormap(JIN_env.x_display, RootWindow(JIN_env.x_display, window->screen_id), window->visual->visual, AllocNone);
+  window->attribs.colormap          = XCreateColormap(JIN_env.x_display, RootWindow(JIN_env.x_display, JIN_env.screen_id), window->visual->visual, AllocNone);
   window->attribs.event_mask        = ExposureMask;
-  window->window = XCreateWindow(JIN_env.x_display, RootWindow(JIN_env.x_display, window->screen_id), 0, 0, 480, 320, 0, window->visual->depth, InputOutput, window->visual->visual, CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &window->attribs);
+  window->window = XCreateWindow(JIN_env.x_display, RootWindow(JIN_env.x_display, JIN_env.screen_id), 0, 0, 480, 320, 0, window->visual->depth, InputOutput, window->visual->visual, CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &window->attribs);
 
   XSelectInput(JIN_env.x_display, window->window, KeyPressMask | KeyReleaseMask);
   XSetWMProtocols(JIN_env.x_display, window->window, &JIN_env.wm_delete_window, 1);
@@ -196,11 +201,6 @@ struct JIN_Window * JIN_window_create(void)
   return window;
 }
 
-/* 
- * TODO
- *
- * Memory leaked:
- */
 int JIN_window_destroy(struct JIN_Window *window)
 {
   XFree(window->visual);
@@ -221,7 +221,7 @@ int JIN_window_buffer_swap(struct JIN_Window *window)
 
 int JIN_window_gl_set(struct JIN_Window *window)
 {
-  const char *glx_extensions = glXQueryExtensionsString(JIN_env.x_display, window->screen_id);
+  const char *glx_extensions = glXQueryExtensionsString(JIN_env.x_display, JIN_env.screen_id);
   
   int context_attribs[] = {
     GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
@@ -273,6 +273,72 @@ int JIN_window_size_get(struct JIN_Window *window, int *x, int *y)
   XGetWindowAttributes(JIN_env.x_display, window->window, &attribs);
   *x = attribs.width;
   *y = attribs.height;
+
+  return 0;
+}
+
+#define STATE_ATOMS 4
+/*
+ * The documentation for these atoms is whack
+ *
+ * I believe I used the freedesktop specs for them
+ */
+static int dialog_setup(Window *msgbox, Window parent)
+{
+  XSetWindowAttributes attribs;
+  Atom _NET_WM_WINDOW_TYPE, _NET_WM_WINDOW_TYPE_DIALOG, _NET_WM_NAME;
+  
+  attribs.border_pixel      = JIN_env.border_pixel;
+  attribs.background_pixel  = JIN_env.background_pixel;
+  attribs.override_redirect = True;
+  attribs.event_mask        = ExposureMask;
+  *msgbox = XCreateWindow(JIN_env.x_display, XRootWindow(JIN_env.x_display, JIN_env.screen_id),
+      0, 0, 240, 160, 0,
+      CopyFromParent, InputOutput, CopyFromParent,
+      CWBackPixel | CWBorderPixel | CWEventMask, &attribs);
+
+  Atom _NET_WM_STATE = XInternAtom(JIN_env.x_display, "_NET_WM_STATE", False);
+  char *state_atoms_names[STATE_ATOMS] = {
+    "_NET_WM_STATE_SKIP_TASKBAR",
+    "_NET_WM_STATE_SKIP_PAGER",
+    "_NET_WM_STATE_FOCUSED",
+    "_NET_WM_STATE_MODAL"
+  };
+  Atom state_atoms[STATE_ATOMS];
+  for (int i = 0; i < STATE_ATOMS; ++i) {
+    state_atoms[i] = XInternAtom(JIN_env.x_display, state_atoms_names[i], False);
+  }
+  XChangeProperty(JIN_env.x_display, *msgbox, _NET_WM_STATE, XA_ATOM, 32, PropModeReplace, (unsigned char *) state_atoms, STATE_ATOMS);
+  XSetTransientForHint(JIN_env.x_display, *msgbox, parent);
+
+  _NET_WM_WINDOW_TYPE = XInternAtom(JIN_env.x_display, "_NET_WM_WINDOW_TYPE", False);
+  _NET_WM_WINDOW_TYPE_DIALOG = XInternAtom(JIN_env.x_display, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+  XChangeProperty(JIN_env.x_display, *msgbox, _NET_WM_WINDOW_TYPE, XA_ATOM, 32, PropModeReplace,
+      (unsigned char *) &_NET_WM_WINDOW_TYPE_DIALOG, 1);
+  XSetWMProtocols(JIN_env.x_display, *msgbox, &JIN_env.wm_delete_window,1 );
+
+  return 0;
+}
+int JIN_window_dialog(struct JIN_Window *window, const char* msg)
+{
+  Window               msgbox;
+
+  dialog_setup(&msgbox, window->window);
+
+  /* Show the message box */
+  XClearWindow(JIN_env.x_display, msgbox);
+  XMapRaised(JIN_env.x_display, msgbox);
+
+  /* Loop the message box */
+  XEvent event;
+  while (1) {
+    XNextEvent(JIN_env.x_display, &event);
+    if (event.xany.window == msgbox && event.type == ClientMessage && event.xclient.data.l[0] == JIN_env.wm_delete_window)
+      break;
+  }
+
+  /* Quit the message box */
+  XDestroyWindow(JIN_env.x_display, msgbox);
 
   return 0;
 }
