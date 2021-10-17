@@ -1,6 +1,16 @@
 #ifndef JIN_GLL_H
 #define JIN_GLL_H
 
+
+#ifdef __linux__
+  #define GLDECL
+#elif _WIN32
+  #include <Windows.h>
+  #define GLDECL WINAPI
+#else
+  #error Platform not supported (JIN GL Loader)
+#endif
+
 #include <GL/gl.h>
 #include <GL/glext.h>
 
@@ -15,14 +25,6 @@
  */
 
 int JIN_gll(void);
-
-#ifdef __linux__
-  #define GLDECL
-#elif _WIN32
-  #define GLDECL WINAPI
-#else
-  #error Platform not supported (JIN GL Loader)
-#endif
 
 /* Declare the functions */
 #define JIN_GL_PROCS \

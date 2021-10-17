@@ -144,6 +144,10 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "{\n"
     "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
     "}\n\0";
+/* This shouldn't be needed but is for some reason, GLAPIENTRY is not defined */
+#ifdef _WIN32
+#define GLAPIENTRY __stdcall
+#endif
 void GLAPIENTRY gl_err_callback(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *msg, const void *usr_param)
 {
   if (severity != GL_DEBUG_SEVERITY_NOTIFICATION)

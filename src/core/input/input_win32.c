@@ -1,5 +1,5 @@
 #include "input.h"
-#include "core.h"
+#include "../core.h"
 #include <windows.h>
 
 #define SYM_LIST \
