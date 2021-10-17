@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME}
   ${CMAKE_CURRENT_LIST_DIR}/src/core.c
   ${CMAKE_CURRENT_LIST_DIR}/src/driver.c
   ${CMAKE_CURRENT_LIST_DIR}/src/env/env.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/gll/gll.c
   ${CMAKE_CURRENT_LIST_DIR}/src/input/input.c
   ${CMAKE_CURRENT_LIST_DIR}/src/thread/thread.c
   ${CMAKE_CURRENT_LIST_DIR}/src/window/window.c

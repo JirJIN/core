@@ -1,5 +1,5 @@
 #include "core.h"
-#include "glew/glew.h"
+#include "gll/gll.h"
 #include "time.h"
 #include "thread/thread.h"
 
@@ -150,11 +150,7 @@ void GLAPIENTRY gl_err_callback(GLenum src, GLenum type, GLuint id, GLenum sever
 JIN_THREAD_FN JIN_game_thread(void *data)
 {
   JIN_window_gl_set(root);
-  GLenum err;
-  if ((err = glewInit()) != GLEW_OK) {
-    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-    return 0;
-  }
+  JIN_gll();
 
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(gl_err_callback, 0);
