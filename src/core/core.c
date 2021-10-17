@@ -27,7 +27,7 @@ int JIN_init(void)
 {
   if (JIN_logger_init(JIN_LOGGER_CONSOLE, JIN_LOGGER_ERR)) return -1;
   if (JIN_env_init(&JIN_env)) ERR_EXIT(-1, "Could not initialize the environment");
-  if ((root = JIN_window_create())) ERR_EXIT(-1, "Could not create the root window");
+  if (!(root = JIN_window_create())) ERR_EXIT(-1, "Could not create the root window");
 
   return 0;
 }
