@@ -25,8 +25,9 @@ struct JIN_Input JIN_input  = {0};
  */
 int JIN_init(void)
 {
-  JIN_env_init(&JIN_env);
-  root = JIN_window_create();
+  if (JIN_logger_init(JIN_LOGGER_CONSOLE, JIN_LOGGER_ERR)) return -1;
+  if (JIN_env_init(&JIN_env)) ERR_EXIT(-1, "Could not initialize the environment");
+  if ((root = JIN_window_create())) ERR_EXIT(-1, "Could not create the root window");
 
   return 0;
 }
@@ -43,6 +44,7 @@ int JIN_quit(void)
 {
   JIN_window_destroy(root);
   JIN_env_quit(&JIN_env);
+  JIN_logger_quit();
 
   return 0;
 }
@@ -145,7 +147,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
 void GLAPIENTRY gl_err_callback(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *msg, const void *usr_param)
 {
   if (severity != GL_DEBUG_SEVERITY_NOTIFICATION)
-    fprintf(stderr, "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n", type, severity, msg);
+    LOG(ERR, "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n", type, severity, msg);
 }
 JIN_THREAD_FN JIN_game_thread(void *data)
 {

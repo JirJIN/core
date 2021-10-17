@@ -1,4 +1,5 @@
 libs/
+log.txt
 
 # Editors
 .clangd

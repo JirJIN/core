@@ -1,8 +1,8 @@
 #include "thread.h"
 #include <unistd.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include "../logger/logger.h"
 
 struct JIN_Thread {
   pthread_t pthread;
@@ -13,7 +13,7 @@ struct JIN_Thread * JIN_thread_create(JIN_THREAD_FN (*fn)(void *))
   struct JIN_Thread *thread;
 
   if (!(thread = malloc(sizeof(struct JIN_Thread)))) {
-    fprintf(stderr, "Out of memory\n");
+    LOG(ERR, "Out of memory\n");
     return NULL;
   }
 

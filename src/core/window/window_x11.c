@@ -6,8 +6,7 @@
 #include <string.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
-
-#include <stdio.h>
+#include "../logger/logger.h"
 
 struct JIN_Window {
   Window               window;
@@ -76,8 +75,7 @@ static int get_best_fb(struct JIN_Window *window, GLint *glx_attribs)
   int fb_count;
   GLXFBConfig *fb_configs = glXChooseFBConfig(JIN_env.x_display, JIN_env.screen_id, glx_attribs, &fb_count);
   if (!fb_configs) {
-    fprintf(stderr, "Could not get framebuffer config\n");
-    return -1;
+    ERR_EXIT(-1, "Could not get framebuffer config\n");
   }
 
   /* Pick the fb_config/visual with the most samples/pixel */
@@ -88,8 +86,7 @@ static int get_best_fb(struct JIN_Window *window, GLint *glx_attribs)
     int sample_buffer, samples;
     
     if (!(vi = glXGetVisualFromFBConfig(JIN_env.x_display, fb_configs[i]))) {
-      fprintf(stderr, "Could not get visual info\n");
-      return -1;
+      ERR_EXIT(-1, "Could not get visual info\n");
     }
 
     glXGetFBConfigAttrib(JIN_env.x_display, fb_configs[i], GLX_SAMPLE_BUFFERS, &sample_buffer);
@@ -121,8 +118,7 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
   GLint glx_major, glx_minor;
   glXQueryVersion(JIN_env.x_display, &glx_major, &glx_minor);
   if (glx_major <= 1 && glx_minor < 3) {
-    fprintf(stderr, "GLX 1.3 or greater is required\n");
-    return -1;
+    ERR_EXIT(-1, "GLX 1.3 or greater is required\n");
   }
 
   GLint glx_attribs[] = {
@@ -143,19 +139,17 @@ static int JIN_window_gl_setup(struct JIN_Window *window)
   get_best_fb(window, glx_attribs);
 
   if (!(window->visual = glXGetVisualFromFBConfig(JIN_env.x_display, window->fb_config))) {
-    fprintf(stderr, "Could not create a visual window\n");
-    return -1;
+    ERR_EXIT(-1, "Could not create a visual window\n");
   }
 
   if (JIN_env.screen_id != window->visual->screen) {
-    fprintf(stderr, "Screen id does not match visual screen\n");
-    return -1;
+    ERR_EXIT(-1, "Screen id does not match visual screen\n");
   }
 
   /* Actually create the context */
   glx_create_context_attribs_arb = (GLXContext (*)(Display *, GLXFBConfig, GLXContext, Bool, const int *)) glXGetProcAddressARB((const GLubyte *) "glXCreateContextAttribsARB");
   if (!glx_create_context_attribs_arb) {
-    fprintf(stderr, "glXCreateContextAttribsARB() not found \n");
+    ERR_EXIT(-1, "glXCreateContextAttribsARB() not found \n");
   }
 
   return 0;
@@ -166,15 +160,13 @@ struct JIN_Window * JIN_window_create(void)
   struct JIN_Window *window;
 
   if (!(window = malloc(sizeof(struct JIN_Window)))) {
-    fprintf(stderr, "Out of memory\n");
-    return NULL;
+    ERR_EXIT(NULL, "Out of memory\n");
   }
 
   window->screen = XDefaultScreenOfDisplay(JIN_env.x_display);
 
   if (JIN_window_gl_setup(window)) {
-    fprintf(stderr, "Could not set up OpenGL\n");
-    return NULL;
+    ERR_EXIT(NULL, "Could not set up OpenGL\n");
   }
 
   /* Create the Window */
@@ -242,7 +234,7 @@ int JIN_window_gl_set(struct JIN_Window *window)
   
   /* Check if the context is direct */
   if (!glXIsDirect(JIN_env.x_display, window->context)) {
-    fprintf(stderr, "GLX context is not direct\n");
+    LOG(LOG, "GLX context is not direct\n");
   }
 
   return 0;

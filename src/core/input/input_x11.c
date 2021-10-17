@@ -3,9 +3,7 @@
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
-#include "core.h"
-
-#include <stdio.h>
+#include "core/core.h"
 
 #define SYM_LIST \
   X(f1, XK_F1) \

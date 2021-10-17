@@ -3,6 +3,7 @@
 
 #include "input/input.h"
 #include "thread/thread.h"
+#include "logger/logger.h"
 
 /*
  * CORE

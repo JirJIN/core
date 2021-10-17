@@ -1,12 +1,11 @@
 #include "env.h"
-
-#include <stdio.h>
+#include "../logger/logger.h"
 
 int error_handler(Display *display, XErrorEvent *event)
 {
   char buff[512];
   XGetErrorText(display, event->error_code, buff, 512);
-  fprintf(stderr, "GLX Error: %s\n", buff);
+  LOG(ERR, "GLX Error: %s\n", buff);
   return 0;
 }
 
@@ -15,7 +14,7 @@ int JIN_env_init(struct JIN_Env *env)
   XInitThreads();
 
   if (!(env->x_display = XOpenDisplay(NULL))) {
-    fprintf(stderr, "Could not open a display (X11)\n");
+    LOG(ERR, "Could not open a display (X11)\n");
     return -1;
   }
   XSetErrorHandler(error_handler);

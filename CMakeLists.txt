@@ -7,16 +7,14 @@ set(CMAKE_BUILD_TYPE Debug)
 project(core)
 
 add_executable(${PROJECT_NAME}
-  ${CMAKE_CURRENT_LIST_DIR}/src/core.c
   ${CMAKE_CURRENT_LIST_DIR}/src/driver.c
-  ${CMAKE_CURRENT_LIST_DIR}/src/env/env.c
-  ${CMAKE_CURRENT_LIST_DIR}/src/gll/gll.c
-  ${CMAKE_CURRENT_LIST_DIR}/src/input/input.c
-  ${CMAKE_CURRENT_LIST_DIR}/src/thread/thread.c
-  ${CMAKE_CURRENT_LIST_DIR}/src/window/window.c
-
-  # Libraries
-  ${CMAKE_CURRENT_LIST_DIR}/libs/glew/glew.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/core.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/env/env.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/gll/gll.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/input/input.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/logger/logger.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/thread/thread.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/core/window/window.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
