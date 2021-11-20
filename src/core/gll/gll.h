@@ -16,7 +16,8 @@
 
 int JIN_gll(void);
 
-#ifdef __linux__
+#ifdef __EMSCRIPTEN__
+#elif __linux__
   #define GLDECL
 #elif _WIN32
   #define GLDECL WINAPI
