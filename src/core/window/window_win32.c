@@ -2,8 +2,8 @@
 #include <Windows.h>
 #include "../env/env.h"
 #include <stdio.h>
-#include "glew/glew.h"
-#include "glew/wglew.h"
+#include <GL/gl.h>
+#include <GL/wgl.h>
 
 struct JIN_Window {
   HWND handle;

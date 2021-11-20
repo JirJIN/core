@@ -18,7 +18,7 @@ struct JIN_Thread * JIN_thread_create(JIN_THREAD_FN (*fn)(void *))
 
   if (!(thread->handle = (HANDLE) _beginthreadex(NULL, 0, fn, NULL, 0, NULL))) {
     fprintf(stderr, "Could not create a thread\n");
-    return -1;
+    return NULL;
   }
 
   return thread;
