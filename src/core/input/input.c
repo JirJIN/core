@@ -5,5 +5,5 @@
 #elif _WIN32
   #include "input_win32.c"
 #else
-  #error Platform not supported (JIN Input)
+  #include "input_em.c"
 #endif

@@ -28,7 +28,7 @@ extern struct JIN_Input JIN_input; /* "Frame" Input */
 int JIN_init(void);
 int JIN_quit(void);
 
-int JIN_tick  (void);
+void JIN_tick  (void);
 int JIN_update(void);
 int JIN_draw  (void);
 

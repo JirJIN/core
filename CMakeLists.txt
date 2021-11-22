@@ -6,8 +6,13 @@ set(CMAKE_BUILD_TYPE Debug)
 
 project(core)
 
+set(DRIVER "${CMAKE_CURRENT_LIST_DIR}/src/driver.c")
+if (EMSCRIPTEN)
+  set(DRIVER "${CMAKE_CURRENT_LIST_DIR}/src/driver_web.c")
+endif ()
+
 add_executable(${PROJECT_NAME}
-  ${CMAKE_CURRENT_LIST_DIR}/src/driver.c
+  ${DRIVER}
   ${CMAKE_CURRENT_LIST_DIR}/src/core/core.c
   ${CMAKE_CURRENT_LIST_DIR}/src/core/env/env.c
   ${CMAKE_CURRENT_LIST_DIR}/src/core/gll/gll.c
@@ -31,14 +36,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Libraries
 set(CORE_LIBS "")
 
-if (UNIX)
-  set(CORE_LIBS "-lX11 -lGL -pthread")
-endif (UNIX)
+if (EMSCRIPTEN)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s OFFSCREEN_FRAMEBUFFER=1 -s USE_WEBGL2=1")
 
-if (WIN32)
+elseif (UNIX)
+  set(CORE_LIBS "-lX11 -lGL -pthread")
+
+elseif (WIN32)
   set(CORE_LIBS "opengl32")
-  add_definitions(-DGLEW_STATIC)
-endif (WIN32)
+
+endif ()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CORE_LIBS})
 

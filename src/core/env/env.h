@@ -8,7 +8,9 @@
  * An example would be the X11 display
  */
 
-#ifdef __linux__
+#ifdef __EMSCRIPTEN__
+  #include "env_em.h"
+#elif __linux__
   #include "env_x11.h"
 #elif _WIN32
   #include "env_win32.h"

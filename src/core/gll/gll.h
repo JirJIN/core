@@ -2,7 +2,9 @@
 #define JIN_GLL_H
 
 
-#ifdef __linux__
+#ifdef __EMSCRIPTEN__
+
+#elif __linux__
   #define GLDECL
 #elif _WIN32
   #include <Windows.h>
@@ -12,7 +14,9 @@
 #endif
 
 #include <GL/gl.h>
-#include <GL/glext.h>
+#ifdef __EMSCRIPTEN__
+  #include <GLES3/gl3.h>
+#endif
 
 /*
  * GLL
@@ -25,15 +29,6 @@
  */
 
 int JIN_gll(void);
-
-#ifdef __EMSCRIPTEN__
-#elif __linux__
-  #define GLDECL
-#elif _WIN32
-  #define GLDECL WINAPI
-#else
-  #error Platform not supported (JIN GL Loader)
-#endif
 
 /* Declare the functions */
 #define JIN_GL_PROCS \
@@ -59,11 +54,18 @@ int JIN_gll(void);
   GLFN(void,            glUseProgram,              GLuint) \
   GLFN(void,            glVertexAttribPointer,     GLuint, GLint, GLenum, GLboolean, GLsizei, const GLvoid *) \
 
+#ifndef __EMSCRIPTEN__
+
 #define GLFN(ret, name, ...) \
   typedef ret GLDECL name##proc(__VA_ARGS__); \
   name##proc *name;
-  
+
 JIN_GL_PROCS
 #undef GLFN
+
+#endif
+
+/* This isn't needed anymore, clean up namespace */
+#undef GLDECL
 
 #endif

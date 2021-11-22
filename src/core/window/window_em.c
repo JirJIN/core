@@ -2,6 +2,7 @@
 #include <emscripten/html5.h>
 #include "../logger/logger.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 struct JIN_Window {
   EMSCRIPTEN_WEBGL_CONTEXT_HANDLE gl_ctx;
@@ -9,7 +10,7 @@ struct JIN_Window {
 
 struct JIN_Window * JIN_window_create(void)
 {
-  EM_ASM(var window = document.createElement("canvas"); window.id = "JIN_WINDOW"; document.body.appendChild(window));
+  EM_ASM(var window = document.createElement('canvas'); window.id = 'JIN_WINDOW'; document.body.appendChild(window));
 
   struct JIN_Window *window;
 
@@ -17,8 +18,14 @@ struct JIN_Window * JIN_window_create(void)
     ERR_EXIT(NULL, "Out of memory");
   }
 
+  JIN_window_size_set(window, 960, 640);
+
   EmscriptenWebGLContextAttributes attribs;
+  emscripten_webgl_init_context_attributes(&attribs);
+  attribs.renderViaOffscreenBackBuffer = EM_TRUE;
   attribs.explicitSwapControl = EM_TRUE;
+  attribs.majorVersion = 2;
+  attribs.minorVersion = 0;
   window->gl_ctx = emscripten_webgl_create_context("#JIN_WINDOW", &attribs);
 
   return window;
@@ -54,7 +61,7 @@ int JIN_window_size_set(struct JIN_Window *window, int x, int y)
   return 0;
 }
 
-int JIN_window_set_get(struct JIN_Window *window, int *x, int *y)
+int JIN_window_size_get(struct JIN_Window *window, int *x, int *y)
 {
   emscripten_get_canvas_element_size("#JIN_WINDOW", x, y);
   return 0;

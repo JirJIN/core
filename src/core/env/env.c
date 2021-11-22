@@ -1,6 +1,8 @@
 #include "env.h"
 
-#ifdef __linux__
+#ifdef __EMSCRIPTEN__
+  #include "env_em.c"
+#elif __linux__
   #include "env_x11.c"
 #elif _WIN32
 #include "env_win32.c"
